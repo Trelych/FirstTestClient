@@ -41,25 +41,49 @@ func main() {
 	conn, err := net.Dial("tcp", "localhost:7777")
 	if err != nil {
 		fmt.Println("error connection: ", err)
+		return
 	}
 	defer func() {
 		conn.Close()
-		fmt.Println("Disconnected")
+		fmt.Println("Disconnecting")
 	} ()
+	for {
 
-	requestByteArray := make([]byte, 4)
-	var amount uint32
-	amount = 5
 
-	myByteArray, err := json.Marshal(param)
-	binary.BigEndian.PutUint32(requestByteArray, amount)
-	for _, x := range myByteArray {
-		requestByteArray = append(requestByteArray, x)
+		requestByteArray := make([]byte, 4)
+
+		var amount uint32
+
+		myByteArray, err := json.Marshal(param)
+		if err != nil {
+			fmt.Println("error marshaling:", err)
+			break
+		}
+		amount = uint32(len(myByteArray))
+		binary.BigEndian.PutUint32(requestByteArray, amount)
+		for _, bytePart := range myByteArray {
+			requestByteArray = append(requestByteArray, bytePart)
+		}
+		x, err := conn.Write(requestByteArray)
+		fmt.Println(x, "bytes sending ", string(requestByteArray))
+		buff := make([]byte, 1024)
+		x, err = conn.Read(buff)
+		if err !=nil{
+			fmt.Println("error receive:", err)
+			break
+		}
+		fmt.Println("received ", x, "bytes")
+		fmt.Println("received string", string(buff))
+		break
 	}
-	x, err := conn.Write(requestByteArray)
-	fmt.Println(x, "bytes sending ", string(requestByteArray))
-	x, err = conn.Read(requestByteArray)
-	fmt.Println(string(requestByteArray))
+
+
+
+//	x, err = conn.Write([]byte(StopCharacter))
+//	fmt.Println(x, "bytes sent")
+//	x, err = conn.Read(returnByteArray)
+//	fmt.Println(x, "bytes received")
+//	fmt.Println(string(returnByteArray))
 
 
 
