@@ -80,7 +80,6 @@ func sendDataToSocket(conn net.Conn, param requestInfo) error {
 	for _, bytePart := range myByteArray {
 		requestByteArray = append(requestByteArray, bytePart)
 	}
-	//fmt.Println(x, "bytes sending:", string(requestByteArray))
 	_, err = conn.Write(requestByteArray)
 	if err != nil {
 		fmt.Println("Error sending data:", err)
@@ -102,8 +101,6 @@ func receiveDataFromSocket(conn net.Conn) (forecastNow requestReturn, err error)
 	}
 
 	amount := binary.BigEndian.Uint32([]byte(buff[0:4]))
-	//fmt.Println("amount =", amount)
-	//fmt.Println("Unmarshalling", string(buff[4:amount+4]))
 	err = json.Unmarshal(buff[4:amount+4], &forecastNow)
 	if err != nil {
 		fmt.Println("Unmarshal error: ", err)
@@ -130,8 +127,6 @@ func needContinue(conn net.Conn, param requestInfo) bool {
 			requestByteArray = append(requestByteArray, bytePart)
 		}
 		_, err = conn.Write(requestByteArray)
-		//fmt.Println(x, "bytes sending ", string(requestByteArray))
-
 		return false
 	}
 	return true
@@ -154,19 +149,16 @@ func GetInfoFromServer(conn net.Conn, param requestInfo) bool {
 		fmt.Println("Error searching data for", param.Params.City, "\nError:", forecastNow.Error.Message)
 		return true
 	}
-	fmt.Println("Closest forecast is at", time.Unix(forecastNow.Object.Date, 0), "in", forecastNow.Object.City, "Temperature is", forecastNow.Object.Temp)
-
+	fmt.Println("Closest forecast is at", time.Unix(forecastNow.Object.Date, 0), "in", forecastNow.Object.City, "\nTemperature is", forecastNow.Object.Temp)
+	fmt.Println("Pressure is", forecastNow.Object.Pressure, "\nHumidity is", forecastNow.Object.Humidity)
 	return needContinue(conn, param)
 }
 
-// 27-07-2018 23:59:15
+// correct date example for test 27-07-2018 23:59:15
 func main() {
 
 	param := new(requestInfo)
 	param.Command = "GetWeather" //set default command
-	//param.Params.City = "Moscow"
-	//param.Params.Date = 1532255872
-
 	var connectAddr string
 	myscanner := bufio.NewScanner(os.Stdin)
 	fmt.Println("Enter IP address for connection to or press ENTER to connect to server in Localhost")
@@ -181,7 +173,6 @@ func main() {
 	} else {
 		fmt.Println("Connected success to", connectAddr)
 	}
-	//to not forget to close connection
 	defer func() {
 		conn.Close()
 		fmt.Println("Disconnecting")
@@ -193,90 +184,5 @@ func main() {
 		if !continueRequesting {
 			return
 		}
-		/*
-			fmt.Println("Enter the city you interesting in")
-			myscanner.Scan()
-			param.Params.City = myscanner.Text()
-			fmt.Println("Enter the date and time you interesting in\n Format: DD-MM-YYYY HH:MM:SS")
-			var datetime string
-			myscanner.Scan()
-			datetime = myscanner.Text()
-			fmt.Println(datetime)
-			timestamp, err := time.ParseInLocation("02-01-2006 15:04:05", datetime, time.Local)
-			if err != nil {
-				fmt.Println(err)
-			}
-			fmt.Println("requested time is", timestamp)
-			param.Params.Date = timestamp.Unix()
-			requestByteArray := make([]byte, 4)
-
-			var amount uint32
-
-			myByteArray, err := json.Marshal(param)
-			if err != nil {
-				fmt.Println("error marshaling:", err)
-				break
-			}
-			amount = uint32(len(myByteArray))
-			binary.BigEndian.PutUint32(requestByteArray, amount)
-			for _, bytePart := range myByteArray {
-				requestByteArray = append(requestByteArray, bytePart)
-			}
-			x, err := conn.Write(requestByteArray)
-			fmt.Println(x, "bytes sending ", string(requestByteArray))
-			buff := make([]byte, 1024)
-			x, err = conn.Read(buff)
-			if err !=nil{
-				fmt.Println("error receive:", err)
-				break
-			}
-			var forecastNow requestReturn
-			amount = binary.BigEndian.Uint32([]byte(buff[0:4]))
-			fmt.Println("amount =", amount)
-			fmt.Println("Unmarshalling", string(buff[4:amount+4]))
-			err = json.Unmarshal(buff[4:amount+4], &forecastNow)
-			if err != nil {
-				fmt.Println("Unmarshal error: ", err)
-				break
-			}
-
-			fmt.Println("Closest forecast is at", time.Unix(forecastNow.Object.Date, 0), "in", forecastNow.Object.City, "Temperature is", forecastNow.Object.Temp)
-
-
-			fmt.Println("received ", x, "bytes")
-			fmt.Println("received string", string(buff))
-
-		*/
-
-		/*
-			param.Command = "closeConnection"
-			myByteArray, err = json.Marshal(param)
-			if err != nil {
-				fmt.Println("error marshaling:", err)
-				break
-			}
-			fmt.Println("Marshaled string:", string(myByteArray))
-			amount = uint32(len(myByteArray))
-			fmt.Println()
-			fmt.Println("amount bytes in marshalled string", amount)
-			requestByteArray = make([]byte, 4)
-			binary.BigEndian.PutUint32(requestByteArray, amount)
-			for _, bytePart := range myByteArray {
-				requestByteArray = append(requestByteArray, bytePart)
-			}
-			x, err = conn.Write(requestByteArray)
-			fmt.Println(x, "bytes sending ", string(requestByteArray))
-
-
-
-			break
-		*/
 	}
-
-	//	x, err = conn.Write([]byte(StopCharacter))
-	//	fmt.Println(x, "bytes sent")
-	//	x, err = conn.Read(returnByteArray)
-	//	fmt.Println(x, "bytes received")
-	//	fmt.Println(string(returnByteArray))
-
 }
